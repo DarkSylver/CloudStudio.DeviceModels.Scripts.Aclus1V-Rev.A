@@ -21,22 +21,15 @@ function getEndpoints(deviceAddress, endpoints) {
     // In the code below, two endpoints are created. The first is a
     // temperature sensor, while the second one is a carbon dioxide sensor.
 
-    endpoints.addEndpoint("1", "1 - Temperature sensor", endpointType.temperatureSensor);
-    var e = endpoints.addEndpoint("2", "2 - Flujo", endpointType.genericSensor);
-    e.variableTypeId = 1378;
-    endpoints.addEndpoint("2a", "2a - Flujo", endpointType.flowSensor);
-    endpoints.addEndpoint("3", "3 - Lectura", endpointType.volumeSensor);
-    endpoints.addEndpoint("4", "4 - Flujo reverso acumulado", endpointType.volumeSensor);
-    endpoints.addEndpoint("5", "5 - Flujo diario acumulado", endpointType.volumeSensor);
-    endpoints.addEndpoint("6", "6 - Apertura", endpointType.closureController);
-    endpoints.addEndpoint("7", "7a - Alarma Batería baja", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("8", "7b - Alarma Problema de batería", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("9", "7c - Alarma Tubo vacío", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("10", "7d - Alarma Flujo reverso", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("11", "7e - Alarma Fuera de rango", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("12", "7f - Alarma Problema de temperatura", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("13", "7g - Alarma de EE", endpointType.iasSensor, iasEndpointSubType.alarmInput);
-    endpoints.addEndpoint("14", "8 - No Serie", endpointType.textContainer);
+    endpoints.addEndpoint("1", "Temperature sensor", endpointType.temperatureSensor);
+    var e = endpoints.addEndpoint("2", "Flujo", endpointType.genericSensor);
+    e.variableTypeId = 1359;
+    var e = endpoints.addEndpoint("3", "Lectura", endpointType.genericSensor);
+    e.variableTypeId = 1358;
+    var e = endpoints.addEndpoint("4", "Flujo reverso", endpointType.genericSensor);
+    e.variableTypeId = 1361;
+    var e = endpoints.addEndpoint("5", "Flujo acumulado diario", endpointType.genericSensor);
+    e.variableTypeId = 1360;
 }
 
 function validateDeviceAddress(address, result) {
@@ -82,4 +75,3 @@ function updateEndpointUIRules(endpoint, rules) {
     rules.canDelete = true;
     // rules.canEditSubType = (endpoint.address == "2");
 }
-
