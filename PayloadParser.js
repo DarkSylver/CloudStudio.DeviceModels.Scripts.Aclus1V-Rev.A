@@ -1,18 +1,21 @@
 function parseUplink(device, payload) {
-    // Asegurarse de que el payload se convierte correctamente a bytes
     var payloadb = payload.asBytes(); // Asumiendo que esto convierte correctamente a bytes
     
     env.log("Payloadb:", payloadb);
-    // Asegurarse de que estás pasando el array de bytes a la función Decoder
     var decoded = Decoder(payloadb); // Asegúrate de que estás pasando el array de bytes
     env.log("Decoder:", decoded);
-  
+    env.log("Date: ", decoded.find(variable => variable.variable === 'dev_date').value);
+     
   // Temperature
     if (decoded.some(variable => variable.variable === 'temperature')) {
         var sensor1 = device.endpoints.byAddress("1");
         var temperatureValue = decoded.find(variable => variable.variable === 'temperature').value;
+        var raw_date = decoded.find(variable => variable.variable === 'dev_date').value;
+        env.log(raw_date);
+        var timestamp = formatToUTC(raw_date);
+        env.log(timestamp);
         if (sensor1 != null)
-            sensor1.updateTemperatureSensorStatus(temperatureValue);
+            sensor1.updateTemperatureSensorStatus(temperatureValue, timestamp);
     };
 
   // Flow Rate
@@ -20,51 +23,60 @@ function parseUplink(device, payload) {
         var sensor2 = device.endpoints.byAddress("2");
         var flowrateValue = decoded.find(variable => variable.variable === 'flow_rate').value;
         if (sensor2 != null)
-            sensor2.updateGenericSensorStatus(flowrateValue);
+            sensor2.updateGenericSensorStatus(flowrateValue, timestamp);
     };
+
+    if (decoded.some(variable => variable.variable === 'cumulative_flow')) {
+        var sensor2a = device.endpoints.byAddress("2a");
+        var cflowValue = decoded.find(variable => variable.variable === 'cumulative_flow').value;
+        if (sensor2a != null)
+            sensor2a.updateFlowSensorValueSummation(cflowValue*1000, timestamp);
+    };
+
   // Cumulative flow
     if (decoded.some(variable => variable.variable === 'cumulative_flow')) {
         var sensor3 = device.endpoints.byAddress("3");
         var cflowValue = decoded.find(variable => variable.variable === 'cumulative_flow').value;
         if (sensor3 != null)
-            sensor3.updateGenericSensorStatus(cflowValue);
+            sensor3.updateVolumeSensorStatus(cflowValue*1000, timestamp);
     };
+
   // Reverse cumulative flow
     if (decoded.some(variable => variable.variable === 'reverse_cumulative_flow')) {
         var sensor4 = device.endpoints.byAddress("4");
         var rflowValue = decoded.find(variable => variable.variable === 'reverse_cumulative_flow').value;
         if (sensor4 != null)
-            sensor4.updateGenericSensorStatus(rflowValue);
+            sensor4.updateVolumeSensorStatus(rflowValue*1000, timestamp);
     };
   // Daily cumulative flow
     if (decoded.some(variable => variable.variable === 'daily_cumulative_amount')) {
         var sensor5 = device.endpoints.byAddress("5");
         var dflowValue = decoded.find(variable => variable.variable === 'daily_cumulative_amount').value;
         if (sensor5 != null)
-            sensor5.updateGenericSensorStatus(dflowValue);
+            sensor5.updateVolumeSensorStatus(dflowValue*1000, timestamp);
     };
   // Apertura
     if (decoded.some(variable => variable.variable === 'apertura')) {
         var sensor6 = device.endpoints.byAddress("6");
         var apertura = decoded.find(variable => variable.variable === 'apertura').value;
         if (sensor6 != null)
-            sensor6.updateClosureControllerStatus(false,apertura);
+            sensor6.updateClosureControllerStatus(false,apertura, timestamp);
     };
 
-  // Bateria
-    if (decoded.some(variable => variable.variable === 'bateria')) {
+  // Bateria_voltage
+    if (decoded.some(variable => variable.variable === 'battery')) {
         var sensor7 = device.endpoints.byAddress("7");
-        var bateria = decoded.find(variable => variable.variable === 'bateria').value;
+        var battery = decoded.find(variable => variable.variable === 'battery').value;
         if (sensor7 != null)
-            sensor7.updateGenericSensorStatus(bateria);
+            sensor7.updateIASSensorStatus(battery, timestamp);
     };
 
-  // Bateria_1
-    if (decoded.some(variable => variable.variable === 'bateria_1')) {
+  // Bateria_alarma
+    if (decoded.some(variable => variable.variable === 'battery_1')) {
         var sensor8 = device.endpoints.byAddress("8");
-        var bateria_1 = decoded.find(variable => variable.variable === 'bateria_1').value;
+        var battery_1 = decoded.find(variable => variable.variable === 'battery_1').value;
         if (sensor8 != null)
-            sensor8.updateGenericSensorStatus(bateria_1);
+            sensor8.updateIASSensorStatus(battery_1, timestamp);
     };
 
   // Empty
@@ -72,15 +84,7 @@ function parseUplink(device, payload) {
         var sensor9 = device.endpoints.byAddress("9");
         var empty = decoded.find(variable => variable.variable === 'empty').value;
         if (sensor9 != null)
-            sensor9.updateGenericSensorStatus(empty);
-    };
-
-  // Reverse Flow
-    if (decoded.some(variable => variable.variable === 'reverse_flow')) {
-        var sensor10 = device.endpoints.byAddress("9");
-        var reverse_flow = decoded.find(variable => variable.variable === 'reverse_flow').value;
-        if (sensor10 != null)
-            sensor10.updateGenericSensorStatus(reverse_flow);
+            sensor9.updateIASSensorStatus(empty, timestamp);
     };
 
   // Reverse Flow
@@ -88,7 +92,7 @@ function parseUplink(device, payload) {
         var sensor10 = device.endpoints.byAddress("10");
         var reverse_flow = decoded.find(variable => variable.variable === 'reverse_flow').value;
         if (sensor10 != null)
-            sensor10.updateGenericSensorStatus(reverse_flow);
+            sensor10.updateIASSensorStatus(reverse_flow, timestamp);
     };
 
   // Over Range
@@ -96,7 +100,7 @@ function parseUplink(device, payload) {
         var sensor11 = device.endpoints.byAddress("11");
         var over_range = decoded.find(variable => variable.variable === 'over_range').value;
         if (sensor11 != null)
-            sensor11.updateGenericSensorStatus(over_range);
+            sensor11.updateIASSensorStatus(over_range, timestamp);
     };
 
   // Water Temp
@@ -104,7 +108,7 @@ function parseUplink(device, payload) {
         var sensor12 = device.endpoints.byAddress("12");
         var water_temp = decoded.find(variable => variable.variable === 'water_temp').value;
         if (sensor12 != null)
-            sensor12.updateGenericSensorStatus(water_temp);
+            sensor12.updateIASSensorStatus(water_temp, timestamp);
     };
 
   // ee alarm
@@ -112,7 +116,15 @@ function parseUplink(device, payload) {
         var sensor13 = device.endpoints.byAddress("13");
         var ee_alarm = decoded.find(variable => variable.variable === 'ee_alarm').value;
         if (sensor13 != null)
-            sensor13.updateGenericSensorStatus(ee_alarm);
+            sensor13.updateIASSensorStatus(ee_alarm, timestamp);
+    };
+
+ // meter_addr
+    if (decoded.some(variable => variable.variable === 'meter_addr')) {
+        var sensor14 = device.endpoints.byAddress("14");
+        var meter_addr = decoded.find(variable => variable.variable === 'meter_addr').value;
+        if (sensor14 != null)
+            sensor14.updateTextContainerStatus(meter_addr, timestamp);
     };
 
 }
@@ -193,8 +205,6 @@ function Decoder(bytes) {
     }
 
 
-    // Decodificación de los datos del array de bytes usando la nueva interpretación
-
     var length = bytes.length;
     env.log("Length:", length)
     var protocol = length.toString(16);
@@ -214,24 +224,24 @@ function Decoder(bytes) {
             const cf_unit = parseHex(bytes.slice(14, 15));
             const cumulative_flow = readInt32LE(bytes, 15).toString('16') / 100;
             const cf_unit_set_day = parseHex(bytes.slice(19, 20));
-            const daily_cumulative_amount = readInt32LE(bytes, 20) / 100;
+            const daily_cumulative_amount = readInt32LE(bytes, 20).toString('16') / 100;
             const reverse_cf_unit = parseHex(bytes.slice(24, 25));
-            const reverse_cumulative_flow = parseInt(readInt32LE(bytes, 25)) / 100;
+            const reverse_cumulative_flow = parseInt(readInt32LE(bytes, 25)).toString('16') / 100;
             const flow_rate_unit = parseHex(bytes.slice(29, 30));
-            const flow_rate = parseInt(readInt32LE(bytes, 30)) / 10000;
+            const flow_rate = parseInt(readInt32LE(bytes, 30)).toString('16') / 100;
             const temperature = byteToHexDecimal(bytes[35]) + byteToHexDecimal(bytes[34]) / 100;
             const dev_date = parseHex(bytes.slice(40, 41)) + '/' + parseHex(bytes.slice(41, 42)) + '/' + parseHex(swap16(bytes.slice(42, 44))) + " " + parseHex(bytes.slice(39, 40)) + ':' + parseHex(bytes.slice(38, 39)) + ':' + parseHex(bytes.slice(37, 38));
             const time = parseHex(bytes.slice(39, 40)) + ':' + parseHex(bytes.slice(38, 39)) + ':' + parseHex(bytes.slice(37, 38));
             const alarm = intToBinaryString(bytesToInt(bytes[44],bytes[45])).padStart(16, '0');
             env.log ("Alarm:", alarm)
             const apertura = alarm.charAt(6)+alarm.charAt(7) === '00' ? '100': alarm.charAt(6)+alarm.charAt(7) === '01' ? '0': alarm.charAt(6)+alarm.charAt(7) === '10'? '90': alarm.charAt(6)+alarm.charAt(7) === '11'? 'true': 'false';
-            const bateria = alarm.charAt(5) === '0' ? '0' : '1';
-            const bateria_1 = alarm.charAt(15) === '0' ? '0' : '1';
-            const empty = alarm.charAt(14) === '0' ? '0' : '1';
-            const reverse_flow = alarm.charAt(13) === '0' ? '0' : '1';
-            const over_range = alarm.charAt(12) === '0' ? '0' : '1';
-            const water_temp = alarm.charAt(11) === '0' ? '0' : '1';
-            const ee_alarm = alarm.charAt(10) === '0' ? '0' : '1';
+            const bateria = alarm.charAt(5) === '0' ? '1' : '2';
+            const bateria_1 = alarm.charAt(15) === '0' ? '1' : '2';
+            const empty = alarm.charAt(14) === '0' ? '1' : '2';
+            const reverse_flow = alarm.charAt(13) === '0' ? '1' : '2';
+            const over_range = alarm.charAt(12) === '0' ? '1' : '2';
+            const water_temp = alarm.charAt(11) === '0' ? '1' : '2';
+            const ee_alarm = alarm.charAt(10) === '0' ? '1' : '2';
 
             data = [
                 { variable: 'start_code', value: start_code },
@@ -355,4 +365,29 @@ function hexStringToByteArray(hexString) {
     }
 
     return byteArray;
+}
+
+function formatToUTC(dev_date_str) {
+    // dev_date_str debe venir en formato dd/mm/yyyy HH:MM:SS o similar
+    // Separar fecha y hora
+    var [datePart, timePart] = dev_date_str.split(" ");
+    var [day, month, year] = datePart.split("/");
+    var [hour, minute, second] = timePart.split(":");
+
+    // Convertir a 12h con AM/PM
+    hour = parseInt(hour, 10);
+    var ampm = "AM";
+    if (hour >= 12) {
+        ampm = "PM";
+        if (hour > 12) hour -= 12;
+    } else if (hour === 0) {
+        hour = 12;
+    }
+
+    // Padding
+    month = month.padStart(2, '0');
+    day = day.padStart(2, '0');
+    hour = hour.toString().padStart(2, '0');
+
+    return `${month}/${day}/${year} ${hour}:${minute}:${second} ${ampm}`;
 }
